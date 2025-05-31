@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="zh-CN"> <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">敏捷二维码文件传输 | 扫码即传，无需应用</title>
+    <meta id="metaDescription" name="description" content="通过二维码在设备间即时传输文件。小文件直接嵌入二维码，大文件（最大10MB）通过安全的临时链接分享。快速、简单，无需安装应用。">
+    <meta id="metaKeywords" name="keywords" content="二维码文件传输, 二维码传文件, 跨设备文件共享, 扫码传文件, 静态文件传输, Indie Hacker, 敏捷传输">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script src="https://gosspublic.alicdn.com/aliyun-oss-sdk-6.18.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-md5/0.7.3/md5.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+        }
+        .upload-area {
+            border: 2px dashed #cbd5e1;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .upload-area.dragover {
+            background-color: #e2e8f0;
+            border-color: #94a3b8;
+        }
+        #qrCodeCanvas {
+            display: block;
+            width: 80%; /* 占据其容器宽度的80% */
+            max-width: 420px; /* 最大宽度限制 */
+            /* height 将由QRious根据size自动设置为与宽度相等，形成正方形 */
+            margin: 20px auto; /* 上下边距20px，左右自动，实现居中 */
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            /* Tailwind Preflight 通常会设置 box-sizing: border-box; 
+               这意味着 width 和 max-width 包含 padding 和 border */
+        }
+        .btn {
+            @apply py-2 px-4 rounded-lg font-semibold shadow-md transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-opacity-75;
+        }
+        .btn-primary {
+            @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
+        }
+        .btn-secondary {
+            @apply bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-gray-400;
+        }
+        .loader {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 flex flex-col items-center justify-center min-h-screen p-4">
+
+    <div class="bg-white shadow-xl rounded-lg p-6 md:p-10 w-full max-w-2xl">
+        <header class="text-center mb-8">
+            <h1 id="mainHeading" class="text-3xl md:text-4xl font-bold text-blue-600">敏捷二维码文件传输</h1>
+            <p id="subHeading" class="text-gray-600 mt-2">通过扫描二维码，在您的设备间轻松分享文件。</p>
+        </header>
+
+        <div id="senderView">
+            <div id="uploadArea" class="upload-area p-8 text-center rounded-lg mb-6 cursor-pointer hover:bg-gray-50">
+                <input type="file" id="fileInput" class="hidden">
+                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <p class="mt-2 text-sm text-gray-600">
+                    <span id="uploadInstructionClick" class="font-semibold text-blue-600">点击此处上传文件</span>
+                    <span id="uploadInstructionDrag">或将文件拖拽到这里</span>
+                </p>
+                <p id="uploadHint" class="text-xs text-gray-500 mt-1">最大支持 10MB</p>
+            </div>
+
+            <div id="fileInfo" class="text-sm text-gray-700 mb-4 hidden">
+                <p><strong id="labelFileName">文件名:</strong> <span id="fileName"></span></p>
+                <p><strong id="labelFileSize">大小:</strong> <span id="fileSize"></span></p>
+                <p><strong id="labelFileType">类型:</strong> <span id="fileType"></span></p>
+            </div>
+            
+            <div id="statusMessage" class="text-sm my-4 p-3 rounded-md hidden"></div>
+            <div id="loader" class="loader hidden"></div>
+
+            <div id="qrCodeContainer" class="text-center hidden">
+                <h2 id="scanQrInstruction" class="text-xl font-semibold mb-2 text-gray-700">扫描二维码接收文件</h2>
+                <canvas id="qrCodeCanvas"></canvas>
+                <button id="resetButton" class="btn btn-secondary mt-4">传输新文件</button>
+            </div>
+        </div>
+
+        <div id="receiverView" class="hidden text-center">
+            <h2 id="receiverTitle" class="text-2xl font-semibold mb-6 text-gray-700">正在接收文件...</h2>
+            <div id="receiverLoader" class="loader"></div>
+            <div id="receiverStatusMessage" class="text-sm my-4 p-3 rounded-md hidden"></div>
+            
+            <div id="filePreview" class="mb-6 border rounded-lg p-4 max-h-96 overflow-auto hidden bg-gray-50">
+                </div>
+
+            <a id="downloadButton" href="#" class="btn btn-primary hidden" download>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+                <span id="downloadButtonText">下载文件</span>
+            </a>
+            <p id="receiverNote" class="text-xs text-gray-500 mt-2 hidden"></p>
+            <button id="receiveNewButton" class="btn btn-secondary mt-6" onclick="window.location.href=window.location.pathname">
+                <span id="scanAnotherQrText">扫描其他二维码</span>
+            </button>
+        </div>
+
+        <footer class="text-center mt-10 pt-6 border-t border-gray-200">
+            <p class="text-sm text-gray-500">&copy; <span id="currentYear"></span> <span id="footerText">敏捷二维码文件传输 - 一个Indie Hacker项目</span></p>
+        </footer>
+    </div>
+
+    <script>
+        // --- 配置常量 ---
+        // 更新 FC_TOKEN_ENDPOINT
+        const FC_TOKEN_ENDPOINT = 'https://tmp-token-gen-ezgvuegkbx.cn-shanghai.fcapp.run'; 
+        const MAX_DIRECT_URL_LENGTH_BYTES = 2 * 1024; 
+        const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; 
+
+        // --- 语言包 (与之前版本相同，此处省略以节省空间，实际代码中应保留) ---
+        const translations = {
+            en: {
+                pageTitle: "Agile QR File Transfer | Scan & Send, No App Needed",
+                metaDescription: "Instantly transfer files between devices using QR codes. Small files are embedded directly, large files (up to 10MB) shared via secure temporary links. Fast, simple, no app installation required.",
+                metaKeywords: "QR code file transfer, send file by QR, cross-device file sharing, scan to send file, static file transfer, Indie Hacker, agile transfer",
+                mainHeading: "Agile QR File Transfer",
+                subHeading: "Easily share files between your devices by scanning a QR code.",
+                uploadInstructionClick: "Click here to upload a file",
+                uploadInstructionDrag: "or drag and drop a file here",
+                uploadHint: "Max 10MB",
+                labelFileName: "Filename:",
+                labelFileSize: "Size:",
+                labelFileType: "Type:",
+                unknownFileType: "Unknown type",
+                scanQrInstruction: "Scan QR Code to Receive File",
+                resetButton: "Transfer New File",
+                receiverTitleInitial: "Receiving file...",
+                downloadButtonText: "Download File",
+                scanAnotherQrText: "Scan Another QR Code",
+                footerText: "Agile QR File Transfer - An Indie Hacker Project",
+                previewLabel: (fileName) => `Preview: ${fileName}`,
+                statusProcessingFile: "Processing file...",
+                statusCompressionDone: (size) => `Compression complete (compressed: ${size}). Checking URL length...`, 
+                statusUrlTooLongForDirect: (limitKB) => `Direct transfer URL would be too long (>${limitKB}KB). Switching to OSS.`, 
+                statusQrGenerated: "QR code generated! Please scan with another device.",
+                statusOssGetPerms: "Getting OSS upload permission...",
+                statusOssPermsDone: "Permission granted. Uploading to OSS...",
+                statusOssUploaded: "File uploaded to OSS. QR code generated!",
+                statusFileDecoded: "File decoded and decompressed.",
+                statusLinkReady: "File link ready. Click to download.",
+                errorFileTooLarge: (maxSize) => `File too large. Please select a file smaller than ${maxSize}.`,
+                errorFileProcessing: (message) => `File processing failed: ${message}`,
+                errorFcEndpointNotConfigured: "Aliyun Function Compute endpoint is not configured. Please set FC_TOKEN_ENDPOINT in the code.", // Kept for robustness, though now hardcoded
+                errorFcRequest: (statusText) => `Failed to get OSS credentials from Function Compute: ${statusText}`, // More specific error
+                errorOssGetCreds: (statusText) => `Failed to get OSS credentials: ${statusText}`, // Kept for generic case if getOssCredentials has other logic
+                errorOssCredsFormat: "Incorrect OSS credential format received.",
+                errorOssOperation: (message) => `OSS operation failed: ${message}`,
+                errorOssUpload: (statusMessage) => `OSS upload failed: ${statusMessage}`,
+                errorReceiveFile: (message) => `Error: ${message}`,
+                errorInvalidDataFormat: "Invalid file data format received from QR code.",
+                errorJsonParse: (message) => `Failed to parse file data: ${message}`,
+                errorAtob: (message) => `Base64 decoding failed: ${message}`, 
+                receiverTitleReceiving: (fileName) => `Receiving: ${fileName}`,
+                receiverTitleDownloadReady: (fileName) => `Download ready: ${fileName}`,
+                receiverTitleError: "Failed to receive file",
+                receiverNoteOss: "This is a compressed file (.gz). You may need to decompress it manually after downloading.",
+                guessedFileNameOss: "file_from_cloud.gz"
+            },
+            zh: {
+                pageTitle: "敏捷二维码文件传输 | 扫码即传，无需应用",
+                metaDescription: "通过二维码在设备间即时传输文件。小文件直接嵌入二维码，大文件（最大10MB）通过安全的临时链接分享。快速、简单，无需安装应用。",
+                metaKeywords: "二维码文件传输, 二维码传文件, 跨设备文件共享, 扫码传文件, 静态文件传输, Indie Hacker, 敏捷传输",
+                mainHeading: "敏捷二维码文件传输",
+                subHeading: "通过扫描二维码，在您的设备间轻松分享文件。",
+                uploadInstructionClick: "点击此处上传文件",
+                uploadInstructionDrag: "或将文件拖拽到这里",
+                uploadHint: "最大支持 10MB",
+                labelFileName: "文件名:",
+                labelFileSize: "大小:",
+                labelFileType: "类型:",
+                unknownFileType: "未知类型",
+                scanQrInstruction: "扫描二维码接收文件",
+                resetButton: "传输新文件",
+                receiverTitleInitial: "正在接收文件...",
+                downloadButtonText: "下载文件",
+                scanAnotherQrText: "扫描其他二维码",
+                footerText: "敏捷二维码文件传输 - 一个Indie Hacker项目",
+                previewLabel: (fileName) => `预览: ${fileName}`,
+                statusProcessingFile: "正在处理文件...",
+                statusCompressionDone: (size) => `压缩完成 (压缩后: ${size})。正在检查URL长度...`, 
+                statusUrlTooLongForDirect: (limitKB) => `直接传输的URL将过长 (>${limitKB}KB)，切换到OSS传输。`, 
+                statusQrGenerated: "二维码已生成！请使用另一台设备扫描。",
+                statusOssGetPerms: "正在获取OSS上传许可...",
+                statusOssPermsDone: "许可获取成功，正在上传至OSS...",
+                statusOssUploaded: "文件已上传至OSS，二维码已生成！",
+                statusFileDecoded: "文件已解码并解压。",
+                statusLinkReady: "文件链接已准备好，请点击下载。",
+                errorFileTooLarge: (maxSize) => `文件过大，请选择小于 ${maxSize} 的文件。`,
+                errorFileProcessing: (message) => `文件处理失败: ${message}`,
+                errorFcEndpointNotConfigured: "阿里云函数计算端点未配置。请在代码中设置 FC_TOKEN_ENDPOINT。",
+                errorFcRequest: (statusText) => `从函数计算获取OSS凭证失败: ${statusText}`,
+                errorOssGetCreds: (statusText) => `获取OSS凭证失败: ${statusText}`,
+                errorOssCredsFormat: "获取到的OSS凭证格式不正确。",
+                errorOssOperation: (message) => `OSS 操作失败: ${message}`,
+                errorOssUpload: (statusMessage) => `OSS上传失败: ${statusMessage}`,
+                errorReceiveFile: (message) => `错误: ${message}`,
+                errorInvalidDataFormat: "从二维码获取的文件数据格式无效。",
+                errorJsonParse: (message) => `解析文件数据失败: ${message}`,
+                errorAtob: (message) => `Base64 解码失败: ${message}`, 
+                receiverTitleReceiving: (fileName) => `正在接收: ${fileName}`,
+                receiverTitleDownloadReady: (fileName) => `准备下载: ${fileName}`,
+                receiverTitleError: "接收文件失败",
+                receiverNoteOss: "这是一个压缩文件(.gz)，下载后您可能需要手动解压缩。",
+                guessedFileNameOss: "来自云端的文件.gz"
+            }
+        };
+        let currentLang = 'zh'; 
+
+        function getText(key, ...args) {
+            const langPack = translations[currentLang] || translations.en; 
+            let text = langPack[key] || key; 
+            if (typeof text === 'function') {
+                return text(...args);
+            }
+            return text;
+        }
+        
+        const pageTitleElem = document.getElementById('pageTitle');
+        const metaDescriptionElem = document.getElementById('metaDescription');
+        const metaKeywordsElem = document.getElementById('metaKeywords');
+        const mainHeadingElem = document.getElementById('mainHeading');
+        const subHeadingElem = document.getElementById('subHeading');
+        const uploadInstructionClickElem = document.getElementById('uploadInstructionClick');
+        const uploadInstructionDragElem = document.getElementById('uploadInstructionDrag');
+        const uploadHintElem = document.getElementById('uploadHint');
+        const labelFileNameElem = document.getElementById('labelFileName');
+        const labelFileSizeElem = document.getElementById('labelFileSize');
+        const labelFileTypeElem = document.getElementById('labelFileType');
+        const scanQrInstructionElem = document.getElementById('scanQrInstruction');
+        const resetButtonElem = document.getElementById('resetButton'); 
+        const receiverTitleElem = document.getElementById('receiverTitle'); 
+        const downloadButtonTextElem = document.getElementById('downloadButtonText');
+        const scanAnotherQrTextElem = document.getElementById('scanAnotherQrText');
+        const footerTextElem = document.getElementById('footerText');
+
+        const senderView = document.getElementById('senderView');
+        const receiverView = document.getElementById('receiverView');
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileNameDisplay = document.getElementById('fileName');
+        const fileSizeDisplay = document.getElementById('fileSize');
+        const fileTypeDisplay = document.getElementById('fileType');
+        const statusMessage = document.getElementById('statusMessage');
+        const loader = document.getElementById('loader');
+        const qrCodeContainer = document.getElementById('qrCodeContainer');
+        const qrCodeCanvas = document.getElementById('qrCodeCanvas');
+        
+        const receiverLoader = document.getElementById('receiverLoader');
+        const receiverStatusMessage = document.getElementById('receiverStatusMessage');
+        const filePreview = document.getElementById('filePreview');
+        const downloadButton = document.getElementById('downloadButton');
+        const receiverNote = document.getElementById('receiverNote');
+        
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+        document.addEventListener('DOMContentLoaded', initApp);
+
+        function setLanguage() {
+            const browserLang = navigator.language || navigator.userLanguage; 
+            if (browserLang.startsWith('en')) {
+                currentLang = 'en';
+            } else if (browserLang.startsWith('zh')) {
+                currentLang = 'zh';
+            } else {
+                currentLang = 'en'; 
+            }
+            document.documentElement.lang = currentLang.startsWith('zh') ? 'zh-CN' : currentLang; 
+        }
+
+        function translateUI() {
+            pageTitleElem.textContent = getText('pageTitle');
+            metaDescriptionElem.content = getText('metaDescription');
+            metaKeywordsElem.content = getText('metaKeywords');
+            mainHeadingElem.textContent = getText('mainHeading');
+            subHeadingElem.textContent = getText('subHeading');
+            uploadInstructionClickElem.textContent = getText('uploadInstructionClick');
+            uploadInstructionDragElem.textContent = getText('uploadInstructionDrag');
+            uploadHintElem.textContent = getText('uploadHint');
+            labelFileNameElem.textContent = getText('labelFileName');
+            labelFileSizeElem.textContent = getText('labelFileSize');
+            labelFileTypeElem.textContent = getText('labelFileType');
+            scanQrInstructionElem.textContent = getText('scanQrInstruction');
+            resetButtonElem.textContent = getText('resetButton'); 
+            receiverTitleElem.textContent = getText('receiverTitleInitial'); 
+            downloadButtonTextElem.textContent = getText('downloadButtonText');
+            scanAnotherQrTextElem.textContent = getText('scanAnotherQrText');
+            footerTextElem.textContent = getText('footerText');
+        }
+
+        function initApp() {
+            setLanguage();
+            translateUI(); 
+
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('file') || urlParams.has('obj')) {
+                senderView.classList.add('hidden');
+                receiverView.classList.remove('hidden');
+                handleReceiverMode(urlParams);
+            } else {
+                receiverView.classList.add('hidden');
+                senderView.classList.remove('hidden');
+                setupSenderEventListeners();
+            }
+        }
+
+        function setupSenderEventListeners() {
+            uploadArea.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', handleFileUpload);
+            
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, () => uploadArea.classList.add('dragover'), false);
+            });
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('dragover'), false);
+            });
+            uploadArea.addEventListener('drop', handleDrop, false);
+
+            resetButtonElem.addEventListener('click', () => { 
+                window.location.href = window.location.pathname; 
+            });
+        }
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length > 0) {
+                fileInput.files = files; 
+                handleFileUpload({ target: fileInput }); 
+            }
+        }
+
+        function showStatus(element, messageKey, isError = false, ...args) {
+            element.textContent = getText(messageKey, ...args); 
+            element.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700');
+            if (isError) {
+                element.classList.add('bg-red-100', 'text-red-700');
+            } else {
+                element.classList.add('bg-green-100', 'text-green-700');
+            }
+            element.classList.remove('hidden');
+        }
+
+        function hideStatus(element) {
+            element.classList.add('hidden');
+        }
+
+        function showLoader(loaderElement, show = true) {
+            loaderElement.classList.toggle('hidden', !show);
+        }
+
+        async function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            hideStatus(statusMessage);
+            qrCodeContainer.classList.add('hidden');
+            fileInfo.classList.remove('hidden');
+            fileNameDisplay.textContent = file.name;
+            fileSizeDisplay.textContent = formatBytes(file.size);
+            fileTypeDisplay.textContent = file.type || getText('unknownFileType');
+
+            if (file.size > MAX_FILE_SIZE_BYTES) {
+                showStatus(statusMessage, 'errorFileTooLarge', true, formatBytes(MAX_FILE_SIZE_BYTES));
+                fileInfo.classList.add('hidden');
+                fileInput.value = ''; 
+                return;
+            }
+
+            showLoader(loader, true);
+            showStatus(statusMessage, "statusProcessingFile", false);
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const compressedData = pako.deflate(new Uint8Array(arrayBuffer)); // This is Uint8Array
+                
+                showStatus(statusMessage, 'statusCompressionDone', false, formatBytes(compressedData.length));
+
+                let binary = '';
+                const bytes = compressedData; // Already Uint8Array
+                const len = bytes.byteLength;
+                for (let i = 0; i < len; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                let base64Data = window.btoa(binary);
+                const safeBase64Data = base64Data.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '.');
+
+                const payload = {
+                    name: file.name,
+                    type: file.type || 'application/octet-stream',
+                    data: safeBase64Data
+                };
+                const jsonString = JSON.stringify(payload);
+                const finalUrlParam = encodeURIComponent(jsonString);
+                const directUrl = `${window.location.origin}${window.location.pathname}?file=${finalUrlParam}`;
+
+                if (directUrl.length < MAX_DIRECT_URL_LENGTH_BYTES) {
+                    displayQrCode(directUrl);
+                    showStatus(statusMessage, "statusQrGenerated", false);
+                    showLoader(loader, false);
+                } else {
+                    showStatus(statusMessage, 'statusUrlTooLongForDirect', true, (MAX_DIRECT_URL_LENGTH_BYTES / 1024).toFixed(0));
+                    // Pass original file name, compressed data itself for MD5 and size, and for upload
+                    await uploadToOssAndGetUrl(compressedData, file.name); 
+                }
+            } catch (error) {
+                console.error("File processing failed:", error);
+                showStatus(statusMessage, 'errorFileProcessing', true, error.message);
+                showLoader(loader, false);
+                fileInfo.classList.add('hidden');
+            }
+        }
+        
+        // Updated getOssCredentials function
+        async function getOssCredentials(originalFileName, compressedDataForUpload) {
+            // Calculate MD5 of the compressed data
+            const compressedFileMd5 = "aaa";//md5(compressedDataForUpload); // js-md5 directly on Uint8Array
+            const compressedFileSize = compressedDataForUpload.length;
+
+            const requestBody = {
+                fileName: originalFileName,
+                fileSize: compressedFileSize,
+                fileMd5: compressedFileMd5
+            };
+
+            try {
+                const response = await fetch(FC_TOKEN_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                if (!response.ok) {
+                     const errorText = await response.text();
+                    throw new Error(getText('errorFcRequest', `${response.status} ${response.statusText} - ${errorText}`));
+                }
+                const credentials = await response.json();
+                console.log(credentials)
+                // Validate essential fields from response
+                if (!credentials.AccessKeyId || !credentials.AccessKeySecret || !credentials.SecurityToken || !credentials.Bucket || !credentials.Region || !credentials.Endpoint) {
+                    throw new Error(getText('errorOssCredsFormat'));
+                }
+                return credentials;
+            } catch (error) {
+                console.error("Error getting OSS credentials:", error);
+                throw error; 
+            }
+        }
+        
+        // Updated uploadToOssAndGetUrl function
+        async function uploadToOssAndGetUrl(compressedDataToUpload, originalFileName) {
+            try {
+                showStatus(statusMessage, "statusOssGetPerms", false); 
+                // Pass necessary info to getOssCredentials
+                const creds = await getOssCredentials(originalFileName, compressedDataToUpload);
+                showStatus(statusMessage, "statusOssPermsDone", false);
+
+                const client = new OSS({
+                    region: creds.Region, 
+                    accessKeyId: creds.AccessKeyId,
+                    accessKeySecret: creds.AccessKeySecret,
+                    stsToken: creds.SecurityToken,
+                    bucket: creds.Bucket, // Use bucket from FC response
+                    endpoint: creds.Endpoint, // Use endpoint from FC response
+                    secure: true 
+                });
+
+                // Use originalFileName for a more descriptive name in OSS, prefixed for uniqueness
+                const uniqueOssObjectName = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}-${originalFileName}.gz`;
+                
+                // compressedDataToUpload is already a Uint8Array
+                const blobToUpload = new Blob([compressedDataToUpload], { type: 'application/gzip' }); 
+                const result = await client.put(uniqueOssObjectName, blobToUpload); 
+
+                if (result.res.status !== 200) {
+                    throw new Error(getText('errorOssUpload', result.res.statusMessage));
+                }
+                
+                const signedUrl = client.signatureUrl(uniqueOssObjectName, { expires: 120 }); 
+                console.log(signedUrl)
+                const url = `${window.location.origin}${window.location.pathname}?obj=${encodeURIComponent(signedUrl)}`;
+                
+                displayQrCode(url);
+                showStatus(statusMessage, "statusOssUploaded", false);
+
+            } catch (error) {
+                console.error("OSS operation failed:", error);
+                showStatus(statusMessage, 'errorOssOperation', true, error.message);
+            } finally {
+                showLoader(loader, false); 
+            }
+        }
+
+        function displayQrCode(url) {
+            const canvasElement = document.getElementById('qrCodeCanvas');
+            qrCodeContainer.classList.remove('hidden'); 
+            
+            const drawingSurfaceWidth = canvasElement.clientWidth;
+
+            new QRious({
+                element: canvasElement,
+                value: url,
+                size: Math.max(150, Math.floor(drawingSurfaceWidth)), 
+                level: 'L', 
+                padding: 10, 
+                background: '#ffffff',
+                foreground: '#000000'
+            });
+        }
+
+        async function handleReceiverMode(urlParams) {
+            showLoader(receiverLoader, true);
+            receiverTitleElem.textContent = getText('receiverTitleInitial');
+
+            try {
+                if (urlParams.has('file')) {
+                    const encodedJsonPayload = urlParams.get('file'); 
+                    let payload;
+                    try {
+                        payload = JSON.parse(encodedJsonPayload);
+                    } catch (e) {
+                        console.error("JSON parsing error:", e, "Payload was:", encodedJsonPayload);
+                        throw new Error(getText('errorJsonParse', e.message));
+                    }
+
+                    if (!payload || typeof payload.name !== 'string' || typeof payload.type !== 'string' || typeof payload.data !== 'string') {
+                        throw new Error(getText('errorInvalidDataFormat'));
+                    }
+
+                    const receivedFileName = payload.name;
+                    const receivedFileType = payload.type;
+                    let safeBase64Data = payload.data;
+                    
+                    receiverTitleElem.textContent = getText('receiverTitleReceiving', receivedFileName);
+                    
+                    const originalBase64Data = safeBase64Data.replace(/-/g, '+').replace(/_/g, '/').replace(/\./g, '=');
+
+                    let binaryString;
+                    try {
+                        binaryString = window.atob(originalBase64Data); 
+                    } catch (e) {
+                        console.error("atob decoding error:", e, "Original Base64 was:", originalBase64Data);
+                        throw new Error(getText('errorAtob', e.message));
+                    }
+                    
+                    const len = binaryString.length;
+                    const bytes = new Uint8Array(len);
+                    for (let i = 0; i < len; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+                    
+                    const decompressedData = pako.inflate(bytes);
+                    displayReceivedFile(decompressedData, receivedFileName, receivedFileType);
+                    showStatus(receiverStatusMessage, "statusFileDecoded", false);
+
+                } else if (urlParams.has('obj')) {
+                    const encodedOssUrl = urlParams.get('obj');
+                    const ossUrl = decodeURIComponent(encodedOssUrl); 
+                    
+                    let guessedFileName = getText('guessedFileNameOss');
+                    try {
+                        const urlParts = new URL(ossUrl);
+                        const pathParts = urlParts.pathname.split('/');
+                        const lastPart = pathParts[pathParts.length - 1];
+                        const nameWithoutTimestamp = lastPart.replace(/^\d{13}-\w{8}-/, '');
+                         guessedFileName = nameWithoutTimestamp; 
+                    } catch (e) { console.warn("Cannot parse filename from OSS URL", e); }
+                    
+                    receiverTitleElem.textContent = getText('receiverTitleDownloadReady', guessedFileName);
+                    downloadButton.href = ossUrl;
+                    downloadButton.download = guessedFileName; 
+                    downloadButton.classList.remove('hidden');
+                    receiverNote.textContent = getText('receiverNoteOss');
+                    receiverNote.classList.remove('hidden');
+                    showStatus(receiverStatusMessage, "statusLinkReady", false);
+                }
+            } catch (error) {
+                console.error("Failed to receive file:", error);
+                receiverTitleElem.textContent = getText('receiverTitleError');
+                showStatus(receiverStatusMessage, 'errorReceiveFile', true, error.message);
+            } finally {
+                showLoader(receiverLoader, false);
+            }
+        }
+
+        function displayReceivedFile(data, fileName, fileType) {
+            const blob = new Blob([data], { type: fileType });
+            const objectUrl = URL.createObjectURL(blob);
+
+            downloadButton.href = objectUrl;
+            downloadButton.download = fileName;
+            downloadButton.classList.remove('hidden');
+
+            filePreview.innerHTML = ''; 
+            if (fileType.startsWith('text/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const pre = document.createElement('pre');
+                    pre.textContent = e.target.result;
+                    pre.className = 'whitespace-pre-wrap break-all text-left text-sm';
+                    filePreview.appendChild(pre);
+                    filePreview.classList.remove('hidden');
+                };
+                reader.readAsText(blob);
+            } else if (fileType.startsWith('image/')) {
+                const img = document.createElement('img');
+                img.src = objectUrl;
+                img.alt = getText('previewLabel', fileName); 
+                img.className = 'max-w-full h-auto rounded-md mx-auto';
+                filePreview.appendChild(img);
+                filePreview.classList.remove('hidden');
+            } else {
+                 filePreview.classList.add('hidden'); 
+            }
+        }
+
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes'; 
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']; 
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+        
+    </script>
+</body>
+</html>
