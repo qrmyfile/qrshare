@@ -10,15 +10,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script> 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <script src="https://gosspublic.alicdn.com/aliyun-oss-sdk-6.18.0.min.js"></script>
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/js-md5/0.7.3/md5.min.js"></script> -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-8MQHD5843Z"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-8MQHD5843Z"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
 
-  gtag('config', 'G-8MQHD5843Z');
-</script>
+      gtag('config', 'G-8MQHD5843Z');
+    </script>
     <style>
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
@@ -48,7 +47,7 @@
         .btn-secondary {
             @apply bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-gray-400;
         }
-        .btn-warning { /* New style for the feedback button */
+        .btn-warning { 
             @apply bg-yellow-500 text-white hover:bg-yellow-600 focus:ring-yellow-400;
         }
         .loader {
@@ -73,7 +72,7 @@
         #poweredByText {
             @apply text-xs text-gray-500 mt-2 text-center;
         }
-        .footer-link { /* Added for blog link styling */
+        .footer-link { 
             @apply text-blue-600 hover:text-blue-700 hover:underline;
         }
     </style>
@@ -179,9 +178,8 @@
                 <span id="downloadButtonText">下载文件</span>
             </a>
             <p id="receiverNote" class="text-xs text-gray-500 mt-2 hidden"></p>
-            <!-- <button id="receiveNewButton" class="btn btn-secondary mt-6" onclick="window.location.href=window.location.pathname">
-                <span id="scanAnotherQrText">扫描其他二维码</span>
-            </button> -->
+            <button id="receiveNewButton" class="btn btn-secondary mt-6"> 
+                <span id="goHomeButtonText">返回首页</span> </button>
         </div>
 
         <footer class="text-center mt-10 pt-6 border-t border-gray-200">
@@ -223,9 +221,9 @@
                 receiverTitleInitial: "Receiving file...", 
                 receiverTitleDirectLink: "Ready to process file from QR code...", 
                 downloadButtonText: "Download File",
-                // scanAnotherQrText: "Scan Another QR Code",
+                goHomeButtonText: "Go Home", // New key
                 footerText: "qrmyfile.com", 
-                blogLinkText: "Learn more from blog", // Added blog link text
+                blogLinkText: "Learn more from blog", 
                 previewLabel: (fileName) => `Preview: ${fileName}`,
                 // Promo Text
                 promoFeaturesTitle: "Core Advantages",
@@ -294,9 +292,9 @@
                 receiverTitleInitial: "正在接收文件...", 
                 receiverTitleDirectLink: "准备处理来自二维码的文件...", 
                 downloadButtonText: "下载文件",
-                // scanAnotherQrText: "扫描其他二维码",
+                goHomeButtonText: "返回首页", // New key
                 footerText: "qrmyfile.com", 
-                blogLinkText: "从博客了解更多", // Added blog link text
+                blogLinkText: "从博客了解更多", 
                 previewLabel: (fileName) => `预览: ${fileName}`,
                 // Promo Text
                 promoFeaturesTitle: "产品优势",
@@ -392,7 +390,7 @@
         const resetButtonElem = document.getElementById('resetButton'); 
         const receiverTitleElem = document.getElementById('receiverTitle'); 
         const downloadButtonTextElem = document.getElementById('downloadButtonText');
-        // const scanAnotherQrTextElem = document.getElementById('scanAnotherQrText');
+        const goHomeButtonTextElem = document.getElementById('goHomeButtonText'); // Updated ID
         const footerTextElem = document.getElementById('footerText');
         const poweredByTextElem = document.getElementById('poweredByText'); 
         const largeFileFeedbackButton = document.getElementById('largeFileFeedbackButton'); 
@@ -437,9 +435,11 @@
         const filePreview = document.getElementById('filePreview');
         const downloadButton = document.getElementById('downloadButton');
         const receiverNote = document.getElementById('receiverNote');
+        const receiveNewButton = document.getElementById('receiveNewButton'); // Get the button
         
         let originalFileNameForFeedback = ''; 
         let originalFileSizeForFeedback = 0; 
+        let currentReceivedFileName = ''; // To store filename for download tracking
         
         document.getElementById('currentYear').textContent = new Date().getFullYear();
 
@@ -475,6 +475,7 @@
             if (largeFileFeedbackButton) largeFileFeedbackButton.textContent = getText('largeFileFeedbackButtonText');
             if (feedbackConfirmationMessage) feedbackConfirmationMessage.textContent = getText('feedbackConfirmationText');
             if (blogLinkElem) blogLinkElem.textContent = getText('blogLinkText');
+            if (goHomeButtonTextElem) goHomeButtonTextElem.textContent = getText('goHomeButtonText');
 
 
             const urlParamsForTitle = new URLSearchParams(window.location.search);
@@ -484,7 +485,7 @@
                  receiverTitleElem.textContent = getText('receiverTitleDirectLink');
             }
             downloadButtonTextElem.textContent = getText('downloadButtonText');
-            // scanAnotherQrTextElem.textContent = getText('scanAnotherQrText');
+            // goHomeButtonTextElem is handled above
             footerTextElem.textContent = getText('footerText');
 
             // Translate promo text
@@ -506,24 +507,33 @@
         }
 
         function initApp() {
+            console.log("initApp: Entry. Search params:", window.location.search); 
             setLanguage();
             translateUI(); 
 
             const urlParams = new URLSearchParams(window.location.search);
             let mode = 'sender';
+
             if (urlParams.has('file')) {
+                console.log("initApp: 'file' parameter found. Entering receiver mode setup."); 
                 mode = 'receiver';
                 senderView.classList.add('hidden');
                 receiverView.classList.remove('hidden');
                 if(promoSection) promoSection.classList.add('hidden'); 
+                
+                console.log("initApp: About to call handleReceiverMode."); 
                 handleReceiverMode(urlParams); 
+                console.log("initApp: Returned from handleReceiverMode (or it's async and proceeding)."); 
+
             } else {
+                console.log("initApp: 'file' parameter NOT found. Entering sender mode setup."); 
                 receiverView.classList.add('hidden');
                 senderView.classList.remove('hidden');
                 if(promoSection) promoSection.classList.remove('hidden'); 
                 setupSenderEventListeners();
             }
             trackEvent('load', { md: mode });
+            console.log("initApp: Exiting."); 
         }
 
         function setupSenderEventListeners() {
@@ -543,6 +553,7 @@
             uploadArea.addEventListener('drop', handleDrop, false);
 
             resetButtonElem.addEventListener('click', () => { 
+                trackEvent('reset_app');
                 if(promoSection) promoSection.classList.remove('hidden'); 
                 if(largeFileFeedbackButton) largeFileFeedbackButton.classList.add('hidden');
                 if(feedbackConfirmationMessage) feedbackConfirmationMessage.classList.add('hidden');
@@ -562,6 +573,20 @@
                         }, 3000); 
                     }
                     largeFileFeedbackButton.classList.add('hidden'); 
+                });
+            }
+            // Event listener for download button (receiver mode)
+            downloadButton.addEventListener('click', () => {
+                trackEvent('download_file', {
+                    fn: encodeURIComponent(currentReceivedFileName), // Use stored filename
+                    tt: 'direct' // Assuming this button is only for direct ?file= type downloads
+                });
+            });
+            // Event listener for receiveNewButton (Go Home button)
+            if(receiveNewButton) {
+                receiveNewButton.addEventListener('click', () => {
+                    trackEvent('go_home_receiver');
+                    window.location.href = window.location.pathname;
                 });
             }
         }
@@ -682,7 +707,7 @@
                     showLoader(loader, false);
                 } else {
                     showStatus(statusMessage, 'statusUrlTooLongForDirect', true, (MAX_DIRECT_URL_LENGTH_BYTES / 1024).toFixed(0));
-                    await uploadToOssAndGetUrl(compressedZipData, file.name); 
+                    await uploadToOssAndGetUrl(compressedZipData, file.name, file.size); // Pass original file size
                 }
             } catch (error) {
                 console.error("File processing failed (ZIP or Base64):", error);
@@ -720,6 +745,8 @@
                 derivedRegion = regionInfo.oss_region;
                 derivedBucket = `qrshare-${derivedRegion}`;
                 derivedEndpoint = `oss-${derivedRegion}.aliyuncs.com`;
+                trackEvent('oss_region_select', { region: derivedRegion, country: regionInfo.detected_country_code || 'N/A' });
+
 
             } catch (error) {
                 if (!error.message.includes(getText(userFriendlyErrorKey))) { 
@@ -730,7 +757,7 @@
                 throw error; 
             }
 
-            const zipFileMd5 = "abc"; // Hardcoded MD5
+            const zipFileMd5 = "abc"; 
             const zipFileSize = zipDataForUpload.length;
             const requestBody = {
                 fileName: originalFileName, 
@@ -776,7 +803,7 @@
             };
         }
         
-        async function uploadToOssAndGetUrl(zipDataToUpload, originalFileName) {
+        async function uploadToOssAndGetUrl(zipDataToUpload, originalFileName, originalFileSize) { // Added originalFileSize
             let userMessageKey = 'errorGenericNetwork'; 
             let errorCode = 'OSS_INIT_FAIL'; 
             try {
@@ -814,6 +841,7 @@
                 showStatus(statusMessage, "statusOssUploaded", false); 
                 trackEvent('qr_oss', { 
                     fn: encodeURIComponent(originalFileName), 
+                    fs: originalFileSize, // Use passed original file size
                     zs: zipDataToUpload.length, 
                     tt: 'oss'
                 });
@@ -865,93 +893,129 @@
         }
 
         async function handleReceiverMode(urlParams) {
-            showLoader(receiverLoader, true);
-            if (urlParams.has('file')) {
-                receiverTitleElem.textContent = getText('receiverTitleInitial');
-            } else {
-                receiverTitleElem.textContent = getText('receiverTitleDirectLink');
-            }
+            console.log("handleReceiverMode: Entry. URL Params:", urlParams.toString()); 
+            showLoader(receiverLoader, true); 
+            
+            receiverTitleElem.textContent = getText('receiverTitleInitial'); 
+            console.log("handleReceiverMode: Set initial title for file - ", receiverTitleElem.textContent); 
 
             try {
-                if (urlParams.has('file')) {
-                    const encodedJsonPayload = urlParams.get('file'); 
-                    let payload;
-                    try {
-                        payload = JSON.parse(encodedJsonPayload);
-                    } catch (e) {
-                        console.error("JSON parsing error:", e, "Payload was:", encodedJsonPayload);
-                        const userMessageKey = 'errorJsonParse';
-                        trackEvent('error', { ec: 'JSON_PARSE', em: userMessageKey, details: encodeURIComponent(e.message) });
-                        throw new Error(getText(userMessageKey, e.message)); 
+                console.log("handleReceiverMode: Entering main try block for 'file' parameter processing."); 
+                
+                const encodedJsonPayload = urlParams.get('file'); 
+                console.log("handleReceiverMode: Encoded JSON payload from URL (first 100):", encodedJsonPayload ? encodedJsonPayload.substring(0,100) + "..." : "null/empty"); 
+
+                let payload;
+                try {
+                    payload = JSON.parse(encodedJsonPayload);
+                    console.log("handleReceiverMode: Parsed payload:", payload ? "Exists" : "null/undefined", payload); 
+                } catch (e) {
+                    console.error("JSON parsing error in handleReceiverMode:", e, "Payload was:", encodedJsonPayload);
+                    const userMessageKey = 'errorJsonParse';
+                    trackEvent('error', { ec: 'JSON_PARSE', em: userMessageKey, details: encodeURIComponent(e.message) });
+                    throw new Error(getText(userMessageKey, e.message)); 
+                }
+
+                if (!payload || typeof payload.name !== 'string' || typeof payload.type !== 'string' || typeof payload.data !== 'string') {
+                    console.error("handleReceiverMode: Invalid payload structure:", payload); 
+                    const userMessageKey = 'errorInvalidDataFormat';
+                    trackEvent('error', { ec: 'INVALID_PAYLOAD', em: userMessageKey });
+                    throw new Error(getText(userMessageKey));
+                }
+
+                currentReceivedFileName = String(payload.name); // Store for download tracking
+                const receivedOriginalFileType = String(payload.type); 
+                let safeBase64ZipData = payload.data;      
+                
+                console.log(`handleReceiverMode: Attempting to update title to 'Receiving: ${currentReceivedFileName}'`); 
+                receiverTitleElem.textContent = getText('receiverTitleReceiving', currentReceivedFileName);
+                console.log("handleReceiverMode: Title updated to - ", receiverTitleElem.textContent); 
+                
+                const originalBase64ZipData = safeBase64ZipData.replace(/-/g, '+').replace(/_/g, '/').replace(/\./g, '=');
+                console.log("handleReceiverMode: Original Base64 (first 100 chars):", originalBase64ZipData.substring(0,100) + "..."); 
+
+                let binaryZipString;
+                try {
+                    binaryZipString = window.atob(originalBase64ZipData); 
+                    console.log("handleReceiverMode: atob successful, binary string length:", binaryZipString.length); 
+                } catch (e) {
+                    console.error("atob decoding error in handleReceiverMode:", e, "Input was (first 100):", originalBase64ZipData.substring(0,100)+"...");
+                    const userMessageKey = 'errorAtob';
+                    trackEvent('error', { ec: 'ATOB_FAIL', em: userMessageKey, details: encodeURIComponent(e.message) });
+                    throw new Error(getText(userMessageKey, e.message));
+                }
+                
+                const len = binaryZipString.length;
+                const zipFileBytes = new Uint8Array(len); 
+                for (let i = 0; i < len; i++) {
+                    zipFileBytes[i] = binaryZipString.charCodeAt(i);
+                }
+                console.log("handleReceiverMode: zipFileBytes created, length:", zipFileBytes.length); 
+                
+                try {
+                    const zip = new JSZip();
+                    console.log("handleReceiverMode: JSZip instance created. Loading async..."); 
+                    const loadedZip = await zip.loadAsync(zipFileBytes);
+                    console.log("handleReceiverMode: JSZip loaded. Files in zip:", Object.keys(loadedZip.files)); 
+
+                    let fileInZip = loadedZip.file(currentReceivedFileName);
+                    if (!fileInZip) { 
+                         const filesInZip = Object.keys(loadedZip.files);
+                         if (filesInZip.length > 0) {
+                            console.log(`handleReceiverMode: File '${currentReceivedFileName}' not found, falling back to first file: '${filesInZip[0]}'`); 
+                            fileInZip = loadedZip.file(filesInZip[0]);
+                         }
                     }
 
-                    if (!payload || typeof payload.name !== 'string' || typeof payload.type !== 'string' || typeof payload.data !== 'string') {
-                        const userMessageKey = 'errorInvalidDataFormat';
-                        trackEvent('error', { ec: 'INVALID_PAYLOAD', em: userMessageKey });
+                    if (fileInZip) {
+                        console.log("handleReceiverMode: File found in zip. Decompressing..."); 
+                        const decompressedFileData = await fileInZip.async("uint8array");
+                        console.log("handleReceiverMode: File decompressed, length:", decompressedFileData.length); 
+                        displayReceivedFile(decompressedFileData, currentReceivedFileName, receivedOriginalFileType);
+                        showStatus(receiverStatusMessage, "statusFileDecoded", false);
+                        trackEvent('receive_ok', { 
+                            fn: encodeURIComponent(currentReceivedFileName), 
+                            tt: 'direct' 
+                        });
+                    } else {
+                        console.error("handleReceiverMode: File not found in ZIP after fallback."); 
+                        const userMessageKey = 'errorFileNotFoundInZip';
+                        trackEvent('error', { ec: 'ZIP_NO_FILE', em: userMessageKey });
                         throw new Error(getText(userMessageKey));
                     }
-
-                    const receivedOriginalFileName = payload.name; 
-                    const receivedOriginalFileType = payload.type; 
-                    let safeBase64ZipData = payload.data;      
-                    
-                    receiverTitleElem.textContent = getText('receiverTitleReceiving', receivedOriginalFileName);
-                    
-                    const originalBase64ZipData = safeBase64ZipData.replace(/-/g, '+').replace(/_/g, '/').replace(/\./g, '=');
-
-                    let binaryZipString;
-                    try {
-                        binaryZipString = window.atob(originalBase64ZipData); 
-                    } catch (e) {
-                        console.error("atob decoding error:", e, "Original Base64 was:", originalBase64ZipData);
-                        const userMessageKey = 'errorAtob';
-                        trackEvent('error', { ec: 'ATOB_FAIL', em: userMessageKey, details: encodeURIComponent(e.message) });
-                        throw new Error(getText(userMessageKey, e.message));
-                    }
-                    
-                    const len = binaryZipString.length;
-                    const zipFileBytes = new Uint8Array(len); 
-                    for (let i = 0; i < len; i++) {
-                        zipFileBytes[i] = binaryZipString.charCodeAt(i);
-                    }
-                    
-                    try {
-                        const zip = new JSZip();
-                        const loadedZip = await zip.loadAsync(zipFileBytes);
-                        let fileInZip = loadedZip.file(receivedOriginalFileName);
-                        if (!fileInZip) { 
-                             const filesInZip = Object.keys(loadedZip.files);
-                             if (filesInZip.length > 0) {
-                                fileInZip = loadedZip.file(filesInZip[0]);
-                             }
-                        }
-
-                        if (fileInZip) {
-                            const decompressedFileData = await fileInZip.async("uint8array");
-                            displayReceivedFile(decompressedFileData, receivedOriginalFileName, receivedOriginalFileType);
-                            showStatus(receiverStatusMessage, "statusFileDecoded", false);
-                            trackEvent('receive_ok', { 
-                                fn: encodeURIComponent(receivedOriginalFileName), 
-                                tt: 'direct' 
-                            });
-                        } else {
-                            const userMessageKey = 'errorFileNotFoundInZip';
-                            trackEvent('error', { ec: 'ZIP_NO_FILE', em: userMessageKey });
-                            throw new Error(getText(userMessageKey));
-                        }
-                    } catch (zipError) {
-                        console.error("JSZip processing error:", zipError);
-                        const userMessageKey = 'errorZipProcessing';
-                        trackEvent('error', { ec: 'ZIP_PROC_FAIL', em: userMessageKey, details: encodeURIComponent(zipError.message) });
-                        throw new Error(getText(userMessageKey, zipError.message));
-                    }
-                } 
+                } catch (zipError) {
+                    console.error("JSZip processing error in handleReceiverMode:", zipError); 
+                    const userMessageKey = 'errorZipProcessing';
+                    trackEvent('error', { ec: 'ZIP_PROC_FAIL', em: userMessageKey, details: encodeURIComponent(zipError.message) });
+                    throw new Error(getText(userMessageKey, zipError.message));
+                }
+                 
             } catch (error) {
-                console.error("Failed to receive file:", error);
+                console.error("OUTER CATCH in handleReceiverMode. Error: ", error.message, error.stack); 
+                console.log("OUTER CATCH: Current title before error set: ", receiverTitleElem.textContent); 
                 receiverTitleElem.textContent = getText('receiverTitleError');
-                showStatus(receiverStatusMessage, error.message, true); 
+                console.log("OUTER CATCH: Title set to error: ", receiverTitleElem.textContent); 
+                
+                let displayErrorMessage = error.message;
+                let isTranslated = false;
+                for (const langKey in translations) {
+                    for (const msgKey in translations[langKey]) {
+                        if (typeof translations[langKey][msgKey] === 'string' && translations[langKey][msgKey] === error.message) {
+                            isTranslated = true;
+                            break;
+                        }
+                    }
+                    if (isTranslated) break;
+                }
+
+                if (!isTranslated) { 
+                    displayErrorMessage = getText('errorGenericProcessing'); 
+                }
+                showStatus(receiverStatusMessage, displayErrorMessage, true); 
             } finally {
+                console.log("handleReceiverMode: Entering finally block"); 
                 showLoader(receiverLoader, false);
+                console.log("handleReceiverMode: Loader hidden"); 
             }
         }
 
