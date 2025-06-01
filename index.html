@@ -179,9 +179,9 @@
                 <span id="downloadButtonText">下载文件</span>
             </a>
             <p id="receiverNote" class="text-xs text-gray-500 mt-2 hidden"></p>
-            <button id="receiveNewButton" class="btn btn-secondary mt-6" onclick="window.location.href=window.location.pathname">
+            <!-- <button id="receiveNewButton" class="btn btn-secondary mt-6" onclick="window.location.href=window.location.pathname">
                 <span id="scanAnotherQrText">扫描其他二维码</span>
-            </button>
+            </button> -->
         </div>
 
         <footer class="text-center mt-10 pt-6 border-t border-gray-200">
@@ -223,7 +223,7 @@
                 receiverTitleInitial: "Receiving file...", 
                 receiverTitleDirectLink: "Ready to process file from QR code...", 
                 downloadButtonText: "Download File",
-                scanAnotherQrText: "Scan Another QR Code",
+                // scanAnotherQrText: "Scan Another QR Code",
                 footerText: "qrmyfile.com", 
                 blogLinkText: "Learn more from blog", // Added blog link text
                 previewLabel: (fileName) => `Preview: ${fileName}`,
@@ -294,7 +294,7 @@
                 receiverTitleInitial: "正在接收文件...", 
                 receiverTitleDirectLink: "准备处理来自二维码的文件...", 
                 downloadButtonText: "下载文件",
-                scanAnotherQrText: "扫描其他二维码",
+                // scanAnotherQrText: "扫描其他二维码",
                 footerText: "qrmyfile.com", 
                 blogLinkText: "从博客了解更多", // Added blog link text
                 previewLabel: (fileName) => `预览: ${fileName}`,
@@ -392,7 +392,7 @@
         const resetButtonElem = document.getElementById('resetButton'); 
         const receiverTitleElem = document.getElementById('receiverTitle'); 
         const downloadButtonTextElem = document.getElementById('downloadButtonText');
-        const scanAnotherQrTextElem = document.getElementById('scanAnotherQrText');
+        // const scanAnotherQrTextElem = document.getElementById('scanAnotherQrText');
         const footerTextElem = document.getElementById('footerText');
         const poweredByTextElem = document.getElementById('poweredByText'); 
         const largeFileFeedbackButton = document.getElementById('largeFileFeedbackButton'); 
@@ -484,7 +484,7 @@
                  receiverTitleElem.textContent = getText('receiverTitleDirectLink');
             }
             downloadButtonTextElem.textContent = getText('downloadButtonText');
-            scanAnotherQrTextElem.textContent = getText('scanAnotherQrText');
+            // scanAnotherQrTextElem.textContent = getText('scanAnotherQrText');
             footerTextElem.textContent = getText('footerText');
 
             // Translate promo text
@@ -516,6 +516,7 @@
                 senderView.classList.add('hidden');
                 receiverView.classList.remove('hidden');
                 if(promoSection) promoSection.classList.add('hidden'); 
+                handleReceiverMode(urlParams); 
             } else {
                 receiverView.classList.add('hidden');
                 senderView.classList.remove('hidden');
