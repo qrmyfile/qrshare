@@ -1,15 +1,23 @@
 <!DOCTYPE html>
-<html lang="zh-CN"> <head>
+<html lang="zh-CN"> 
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="pageTitle">敏捷二维码文件传输 | 扫码即传，无需应用</title>
+    <title id="pageTitle">QR-my-file | 敏捷二维码文件传输 | 扫码即传，无需应用</title>
     <meta id="metaDescription" name="description" content="通过二维码在设备间即时传输文件。小文件直接嵌入二维码，大文件（最大10MB）通过安全的临时链接分享。快速、简单，无需安装应用。">
-    <meta id="metaKeywords" name="keywords" content="二维码文件传输, 二维码传文件, 跨设备文件共享, 扫码传文件, 静态文件传输, Indie Hacker, 敏捷传输">
+    <meta id="metaKeywords" name="keywords" content="QR-my-file, 二维码文件传输, 二维码传文件, 跨设备文件共享, 扫码传文件, 静态文件传输, Indie Hacker, 敏捷传输">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script> 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <script src="https://gosspublic.alicdn.com/aliyun-oss-sdk-6.18.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-md5/0.7.3/md5.min.js"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-BMN9JSLLKZ"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-BMN9JSLLKZ');
+    </script>
     <style>
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
@@ -52,6 +60,15 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        .promo-list-item { 
+            @apply mb-3 flex;
+        }
+        .promo-list-prefix { 
+            @apply mr-2 text-blue-500 flex-shrink-0;
+        }
+        #poweredByText {
+            @apply text-xs text-gray-500 mt-2 text-center;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex flex-col items-center justify-center min-h-screen p-4">
@@ -75,6 +92,50 @@
                 <p id="uploadHint" class="text-xs text-gray-500 mt-1">最大支持 10MB</p>
             </div>
 
+            <div id="promoSection" class="my-8 text-gray-700">
+                <div class="grid md:grid-cols-2 gap-x-8 gap-y-6 mb-8"> 
+                    <div>
+                        <h3 id="promoFeaturesTitle" class="text-xl font-semibold text-blue-600 mb-3">产品优势</h3>
+                        <div class="text-sm space-y-2"> 
+                            <div class="promo-list-item">
+                                <span class="promo-list-prefix">*</span>
+                                <div><strong id="feature1Title">扫码即传</strong><span id="feature1Desc">：告别App安装烦恼！手机电脑文件互传，从未如此敏捷。</span></div>
+                            </div>
+                            <div class="promo-list-item">
+                                <span class="promo-list-prefix">*</span>
+                                <div><strong id="feature2Title">真·跨平台</strong><span id="feature2Desc">：无需登录！打开浏览器就能用的文件传输利器，专注纯粹与高效。</span></div>
+                            </div>
+                            <div class="promo-list-item">
+                                <span class="promo-list-prefix">*</span>
+                                <div><strong id="feature3Title">免费·智能双通道</strong><span id="feature3Desc">：小文件『码』上秒传，10MB大文件云端直下，快慢兼顾皆免费！</span></div>
+                            </div>
+                            <div class="promo-list-item">
+                                <span class="promo-list-prefix">*</span>
+                                <div><strong id="feature4Title">万物皆可传</strong><span id="feature4Desc">：文档、图片、代码、压缩包…格式无忧，畅传无阻。</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 id="promoStepsTitle" class="text-xl font-semibold text-blue-600 mb-3">操作步骤</h3>
+                        <div class="text-sm space-y-2"> 
+                            <div class="promo-list-item">
+                                <span class="promo-list-prefix">*</span>
+                                <div>
+                                    <strong id="step1Title">第一步：选择文件</strong><br>
+                                    <span id="step1Desc">轻松一点，您的专属文件二维码即刻呈现。</span>
+                                </div>
+                            </div>
+                            <div class="promo-list-item">
+                                <span class="promo-list-prefix">*</span>
+                                <div>
+                                    <strong id="step2Title">第二步：扫码获取</strong><br>
+                                    <span id="step2Desc">使用手机、平板或电脑扫描二维码，文件立传/下载。</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div id="fileInfo" class="text-sm text-gray-700 mb-4 hidden">
                 <p><strong id="labelFileName">文件名:</strong> <span id="fileName"></span></p>
                 <p><strong id="labelFileSize">大小:</strong> <span id="fileSize"></span></p>
@@ -87,6 +148,7 @@
             <div id="qrCodeContainer" class="text-center hidden">
                 <h2 id="scanQrInstruction" class="text-xl font-semibold mb-2 text-gray-700">扫描二维码接收文件</h2>
                 <canvas id="qrCodeCanvas"></canvas>
+                <p id="poweredByText"></p> 
                 <button id="resetButton" class="btn btn-secondary mt-4">传输新文件</button>
             </div>
         </div>
@@ -112,27 +174,27 @@
         </div>
 
         <footer class="text-center mt-10 pt-6 border-t border-gray-200">
-            <p class="text-sm text-gray-500">&copy; <span id="currentYear"></span> <span id="footerText">敏捷二维码文件传输 - 一个Indie Hacker项目</span></p>
+            <p class="text-sm text-gray-500">&copy; <span id="currentYear"></span> <span id="footerText">qrmyfile.com</span></p>
         </footer>
     </div>
 
     <script>
         // --- 配置常量 ---
         const FC_TOKEN_ENDPOINT = 'https://tmp-token-gen-ezgvuegkbx.cn-shanghai.fcapp.run'; 
-        const REGION_INFO_ENDPOINT = 'https://oss.qrmyfile.com'; // New endpoint for region info
+        const REGION_INFO_ENDPOINT = 'https://oss.qrmyfile.com'; 
         const MAX_DIRECT_URL_LENGTH_BYTES = 2 * 1024; 
         const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; 
         const TRACKING_ENDPOINT_BASE = 'http://qrshare.cn-shanghai.log.aliyuncs.com/logstores/track/track?APIVersion=0.6.0';
 
-        // --- 语言包 (内容与之前版本相同，此处省略，实际代码中应完整保留) ---
+        // --- 语言包 ---
         const translations = {
             en: {
-                pageTitle: "Agile QR File Transfer | Scan & Send, No App Needed",
+                pageTitle: "QR-my-file | Agile QR File Transfer | Scan & Send, No App Needed", 
                 metaDescription: "Instantly transfer files between devices using QR codes. Small files are embedded directly, large files (up to 10MB) shared via secure temporary links. Fast, simple, no app installation required.",
-                metaKeywords: "QR code file transfer, send file by QR, cross-device file sharing, scan to send file, static file transfer, Indie Hacker, agile transfer, ZIP transfer",
+                metaKeywords: "QR-my-file, QR code file transfer, send file by QR, cross-device file sharing, scan to send file, static file transfer, Indie Hacker, agile transfer, ZIP transfer", 
                 mainHeading: "Agile QR File Transfer",
                 subHeading: "Easily share files between your devices by scanning a QR code.",
-                uploadInstructionClick: "Click here to upload a file",
+                uploadInstructionClick: "Click here to select a file to share",
                 uploadInstructionDrag: "or drag and drop a file here",
                 uploadHint: "Max 10MB",
                 labelFileName: "Filename:",
@@ -140,13 +202,30 @@
                 labelFileType: "Type:",
                 unknownFileType: "Unknown type",
                 scanQrInstruction: "Scan QR Code to Receive File",
+                poweredByText: "Powered by qrmyfile.com", 
                 resetButton: "Transfer New File",
                 receiverTitleInitial: "Receiving file...", 
                 receiverTitleDirectLink: "Ready to process file from QR code...", 
                 downloadButtonText: "Download File",
                 scanAnotherQrText: "Scan Another QR Code",
-                footerText: "Agile QR File Transfer - An Indie Hacker Project",
+                footerText: "qrmyfile.com", 
                 previewLabel: (fileName) => `Preview: ${fileName}`,
+                // Promo Text
+                promoFeaturesTitle: "Core Advantages",
+                feature1Title: "Scan & Send",
+                feature1Desc: ": Ditch app installs! Effortless file transfer between phone and PC, more agile than ever.",
+                feature2Title: "True Cross-Platform",
+                feature2Desc: ": No login needed! A file transfer tool that works right in your browser, focusing on purity and efficiency.",
+                feature3Title: "Free & Smart Dual-Channel",
+                feature3Desc: ": Small files transfer instantly via QR, 10MB large files download directly from the cloud—fast or large, always free!",
+                feature4Title: "Transfer Anything",
+                feature4Desc: ": Documents, images, code, archives... No format worries, transfer freely.",
+                promoStepsTitle: "How It Works",
+                step1Title: "Step 1: Select File",
+                step1Desc: "One simple click, and your exclusive file QR code appears instantly.",
+                step2Title: "Step 2: Scan to Get",
+                step2Desc: "Use your phone, tablet, or computer to scan the QR code for instant file transfer/download.",
+                // Dynamic messages
                 statusProcessingFile: "Processing file...",
                 statusCompressionDone: (size) => `ZIP compression complete (archive size: ${size}). Checking URL length...`, 
                 statusUrlTooLongForDirect: (limitKB) => `Direct transfer URL would be too long (>${limitKB}KB). Switching to OSS for direct link.`, 
@@ -170,7 +249,7 @@
                 errorAtob: (message) => `Base64 decoding failed: ${message}`, 
                 errorZipProcessing: (message) => `ZIP file processing failed: ${message}`, 
                 errorFileNotFoundInZip: "File not found within the ZIP archive.", 
-                errorRegionInfo: "Failed to retrieve OSS region information.", // New error key
+                errorRegionInfo: "Failed to retrieve OSS region information.", 
                 receiverTitleReceiving: (fileName) => `Receiving: ${fileName}`,
                 receiverTitleDownloadReady: (fileName) => `Download ready: ${fileName}`, 
                 receiverTitleError: "Failed to receive file",
@@ -178,12 +257,12 @@
                 guessedFileNameOss: "file_from_cloud.zip" 
             },
             zh: {
-                pageTitle: "敏捷二维码文件传输 | 扫码即传，无需应用",
+                pageTitle: "QR-my-file | 敏捷二维码文件传输 | 扫码即传，无需应用", 
                 metaDescription: "通过二维码在设备间即时传输文件。小文件直接嵌入二维码，大文件（最大10MB）通过安全的临时链接分享。快速、简单，无需安装应用。",
-                metaKeywords: "二维码文件传输, 二维码传文件, 跨设备文件共享, 扫码传文件, 静态文件传输, Indie Hacker, 敏捷传输, ZIP传输",
+                metaKeywords: "QR-my-file, 二维码文件传输, 二维码传文件, 跨设备文件共享, 扫码传文件, 静态文件传输, Indie Hacker, 敏捷传输, ZIP传输", 
                 mainHeading: "敏捷二维码文件传输",
                 subHeading: "通过扫描二维码，在您的设备间轻松分享文件。",
-                uploadInstructionClick: "点击此处上传文件",
+                uploadInstructionClick: "点击此处上选择要共享的文件",
                 uploadInstructionDrag: "或将文件拖拽到这里",
                 uploadHint: "最大支持 10MB",
                 labelFileName: "文件名:",
@@ -191,13 +270,30 @@
                 labelFileType: "类型:",
                 unknownFileType: "未知类型",
                 scanQrInstruction: "扫描二维码接收文件",
+                poweredByText: "由 qrmyfile.com 驱动", 
                 resetButton: "传输新文件",
                 receiverTitleInitial: "正在接收文件...", 
                 receiverTitleDirectLink: "准备处理来自二维码的文件...", 
                 downloadButtonText: "下载文件",
                 scanAnotherQrText: "扫描其他二维码",
-                footerText: "敏捷二维码文件传输 - 一个Indie Hacker项目",
+                footerText: "qrmyfile.com", 
                 previewLabel: (fileName) => `预览: ${fileName}`,
+                // Promo Text
+                promoFeaturesTitle: "产品优势",
+                feature1Title: "扫码即传",
+                feature1Desc: "：告别App安装烦恼！手机电脑文件互传，从未如此敏捷。",
+                feature2Title: "真·跨平台",
+                feature2Desc: "：无需登录！打开浏览器就能用的文件传输利器，专注纯粹与高效。",
+                feature3Title: "免费·智能双通道",
+                feature3Desc: "：小文件『码』上秒传，10MB大文件云端直下，快慢兼顾皆免费！",
+                feature4Title: "万物皆可传",
+                feature4Desc: "：文档、图片、代码、压缩包…格式无忧，畅传无阻。",
+                promoStepsTitle: "操作步骤",
+                step1Title: "第一步：选择文件",
+                step1Desc: "轻松一点，您的专属文件二维码即刻呈现。",
+                step2Title: "第二步：扫码获取",
+                step2Desc: "使用手机、平板或电脑扫描二维码，文件立传/下载。",
+                // Dynamic messages
                 statusProcessingFile: "正在处理文件...",
                 statusCompressionDone: (size) => `ZIP 压缩完成 (压缩包大小: ${size})。正在检查URL长度...`, 
                 statusUrlTooLongForDirect: (limitKB) => `直接传输的URL将过长 (>${limitKB}KB)，切换到OSS直链传输。`, 
@@ -221,7 +317,7 @@
                 errorAtob: (message) => `Base64 解码失败: ${message}`, 
                 errorZipProcessing: (message) => `ZIP 文件处理失败: ${message}`, 
                 errorFileNotFoundInZip: "在 ZIP 压缩包中未找到文件。", 
-                errorRegionInfo: "获取OSS区域信息失败。", // 新增错误key
+                errorRegionInfo: "获取OSS区域信息失败。", 
                 receiverTitleReceiving: (fileName) => `正在接收: ${fileName}`,
                 receiverTitleDownloadReady: (fileName) => `准备下载: ${fileName}`, 
                 receiverTitleError: "接收文件失败",
@@ -278,6 +374,26 @@
         const downloadButtonTextElem = document.getElementById('downloadButtonText');
         const scanAnotherQrTextElem = document.getElementById('scanAnotherQrText');
         const footerTextElem = document.getElementById('footerText');
+        const poweredByTextElem = document.getElementById('poweredByText'); 
+
+        // Promo text elements
+        const promoFeaturesTitleElem = document.getElementById('promoFeaturesTitle');
+        const feature1TitleElem = document.getElementById('feature1Title'); 
+        const feature1DescElem = document.getElementById('feature1Desc');   
+        const feature2TitleElem = document.getElementById('feature2Title');
+        const feature2DescElem = document.getElementById('feature2Desc');
+        const feature3TitleElem = document.getElementById('feature3Title');
+        const feature3DescElem = document.getElementById('feature3Desc');
+        const feature4TitleElem = document.getElementById('feature4Title');
+        const feature4DescElem = document.getElementById('feature4Desc');
+
+        const promoStepsTitleElem = document.getElementById('promoStepsTitle');
+        const step1TitleElem = document.getElementById('step1Title');
+        const step1DescElem = document.getElementById('step1Desc');
+        const step2TitleElem = document.getElementById('step2Title');
+        const step2DescElem = document.getElementById('step2Desc');
+        const promoSection = document.getElementById('promoSection');
+
 
         const senderView = document.getElementById('senderView');
         const receiverView = document.getElementById('receiverView');
@@ -327,6 +443,7 @@
             labelFileSizeElem.textContent = getText('labelFileSize');
             labelFileTypeElem.textContent = getText('labelFileType');
             scanQrInstructionElem.textContent = getText('scanQrInstruction');
+            if (poweredByTextElem) poweredByTextElem.textContent = getText('poweredByText'); 
             resetButtonElem.textContent = getText('resetButton'); 
             const urlParamsForTitle = new URLSearchParams(window.location.search);
             if (urlParamsForTitle.has('file')) {
@@ -337,6 +454,23 @@
             downloadButtonTextElem.textContent = getText('downloadButtonText');
             scanAnotherQrTextElem.textContent = getText('scanAnotherQrText');
             footerTextElem.textContent = getText('footerText');
+
+            // Translate promo text
+            promoFeaturesTitleElem.textContent = getText('promoFeaturesTitle');
+            feature1TitleElem.textContent = getText('feature1Title');
+            feature1DescElem.textContent = getText('feature1Desc');
+            feature2TitleElem.textContent = getText('feature2Title');
+            feature2DescElem.textContent = getText('feature2Desc');
+            feature3TitleElem.textContent = getText('feature3Title');
+            feature3DescElem.textContent = getText('feature3Desc');
+            feature4TitleElem.textContent = getText('feature4Title');
+            feature4DescElem.textContent = getText('feature4Desc');
+
+            promoStepsTitleElem.textContent = getText('promoStepsTitle');
+            step1TitleElem.textContent = getText('step1Title');
+            step1DescElem.textContent = getText('step1Desc');
+            step2TitleElem.textContent = getText('step2Title');
+            step2DescElem.textContent = getText('step2Desc');
         }
 
         function initApp() {
@@ -349,10 +483,11 @@
                 mode = 'receiver';
                 senderView.classList.add('hidden');
                 receiverView.classList.remove('hidden');
-                handleReceiverMode(urlParams);
+                if(promoSection) promoSection.classList.add('hidden'); 
             } else {
                 receiverView.classList.add('hidden');
                 senderView.classList.remove('hidden');
+                if(promoSection) promoSection.classList.remove('hidden'); 
                 setupSenderEventListeners();
             }
             trackEvent('load', { md: mode });
@@ -375,6 +510,7 @@
             uploadArea.addEventListener('drop', handleDrop, false);
 
             resetButtonElem.addEventListener('click', () => { 
+                if(promoSection) promoSection.classList.remove('hidden'); 
                 window.location.href = window.location.pathname; 
             });
         }
@@ -415,6 +551,8 @@
         async function handleFileUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
+
+            if(promoSection) promoSection.classList.add('hidden'); 
 
             trackEvent('select', { 
                 fn: encodeURIComponent(file.name), 
@@ -500,13 +638,11 @@
             }
         }
         
-        // Updated getOssCredentials function
         async function getOssCredentials(originalFileName, zipDataForUpload) {
             let regionInfo, fcCredentials;
             let derivedRegion, derivedBucket, derivedEndpoint;
-            const userFriendlyErrorKey = 'errorGenericNetwork'; // Default user-facing error for this phase
+            const userFriendlyErrorKey = 'errorGenericNetwork'; 
 
-            // Step 1: Get Region Info
             try {
                 const regionResponse = await fetch(REGION_INFO_ENDPOINT);
                 if (!regionResponse.ok) {
@@ -516,7 +652,7 @@
                     throw new Error(getText(userFriendlyErrorKey));
                 }
                 regionInfo = await regionResponse.json();
-                if (!regionInfo || !regionInfo.oss_region) { // Check if regionInfo itself is null/undefined
+                if (!regionInfo || !regionInfo.oss_region) { 
                     console.error("Region Info Format Error or missing oss_region:", regionInfo);
                     trackEvent('error', { ec: 'REG_FMT_ERR', em: userFriendlyErrorKey, details: "oss_region missing or invalid format" });
                     throw new Error(getText(userFriendlyErrorKey));
@@ -526,9 +662,7 @@
                 derivedEndpoint = `oss-${derivedRegion}.aliyuncs.com`;
 
             } catch (error) {
-                // If already tracked, error message is already user-friendly. Re-throw.
-                // Otherwise, it's a new network error for fetch itself.
-                if (!error.message.includes(getText(userFriendlyErrorKey))) { // Avoid double wrapping if error is already from getText
+                if (!error.message.includes(getText(userFriendlyErrorKey))) { 
                     console.error("Fetch REGION_INFO_ENDPOINT failed:", error);
                     trackEvent('error', { ec: 'REG_NET_ERR', em: userFriendlyErrorKey, details: encodeURIComponent(error.message) });
                     throw new Error(getText(userFriendlyErrorKey));
@@ -536,8 +670,7 @@
                 throw error; 
             }
 
-            // Step 2: Get STS Credentials from FC Endpoint
-            const zipFileMd5 = 'abc' ;//md5(zipDataForUpload); 
+            const zipFileMd5 = "abc"; // Hardcoded MD5
             const zipFileSize = zipDataForUpload.length;
             const requestBody = {
                 fileName: originalFileName, 
@@ -572,11 +705,10 @@
                 throw error;
             }
 
-            // Step 3: Combine credentials
             return {
-                Region: derivedRegion, // Use derived region
-                Endpoint: derivedEndpoint, // Use derived endpoint
-                Bucket: derivedBucket, // Use derived bucket
+                Region: derivedRegion, 
+                Endpoint: derivedEndpoint, 
+                Bucket: derivedBucket, 
                 AccessKeyId: fcCredentials.AccessKeyId,
                 AccessKeySecret: fcCredentials.AccessKeySecret,
                 SecurityToken: fcCredentials.SecurityToken,
@@ -586,12 +718,10 @@
         
         async function uploadToOssAndGetUrl(zipDataToUpload, originalFileName) {
             let userMessageKey = 'errorGenericNetwork'; 
-            let errorCode = 'OSS_INIT_FAIL'; // Initial error code for this block
+            let errorCode = 'OSS_INIT_FAIL'; 
             try {
                 showStatus(statusMessage, "statusOssGetPerms", false); 
                 const creds = await getOssCredentials(originalFileName, zipDataToUpload);
-                // Errors from getOssCredentials are already generic for user and tracked.
-                // If it reaches here, getOssCredentials was successful.
                 
                 showStatus(statusMessage, "statusOssPermsDone", false);
                 errorCode = 'OSS_CLIENT_INIT'; 
@@ -614,7 +744,7 @@
                 if (result.res.status !== 200) {
                     console.error("OSS Upload Error - Status:", result.res.status, result.res.statusMessage, result); 
                     errorCode = 'OSS_PUT_STAT_ERR';
-                    throw new Error(getText(userMessageKey)); // Generic for user
+                    throw new Error(getText(userMessageKey)); 
                 }
                 
                 errorCode = 'OSS_SIGNURL_OP'; 
@@ -624,25 +754,21 @@
                 showStatus(statusMessage, "statusOssUploaded", false); 
                 trackEvent('qr_oss', { 
                     fn: encodeURIComponent(originalFileName), 
-                    // fs: originalFile.size, // original file size is not directly available here.
-                    zs: zipDataToUpload.length, // size of the zip uploaded
+                    zs: zipDataToUpload.length, 
                     tt: 'oss'
                 });
 
             } catch (error) {
-                console.error(`OSS operation failed at step ${errorCode}:`, error.message); // Log detailed error with context
-                // Show generic error to user. If error came from getOssCredentials, it's already user-friendly.
-                const finalUserMessage = error.message.startsWith(getText('errorGenericNetwork').substring(0,10)) // Check if it's already a translated generic error
+                console.error(`OSS operation failed at step ${errorCode}:`, error.message); 
+                const finalUserMessage = error.message.startsWith(getText('errorGenericNetwork').substring(0,10)) 
                                        ? error.message 
                                        : getText(userMessageKey);
                 showStatus(statusMessage, finalUserMessage, true); 
                 
-                // Tracking was done in getOssCredentials if it failed there.
-                // If it failed here, in OSS client ops:
-                if (errorCode.startsWith('OSS_')) { // Only track if error originated in this block's specific OSS ops.
+                if (errorCode.startsWith('OSS_')) { 
                     trackEvent('error', { 
                         ec: errorCode, 
-                        em: userMessageKey, // The generic key intended for this block
+                        em: userMessageKey, 
                         details: encodeURIComponent(error.message) 
                     });
                 }
@@ -655,6 +781,11 @@
             const canvasElement = document.getElementById('qrCodeCanvas');
             qrCodeContainer.classList.remove('hidden'); 
             
+            const existingPoweredBy = document.getElementById('dynamicPoweredByText');
+            if (existingPoweredBy) {
+                existingPoweredBy.remove(); 
+            }
+            
             const drawingSurfaceWidth = canvasElement.clientWidth;
 
             new QRious({
@@ -666,6 +797,11 @@
                 background: '#ffffff',
                 foreground: '#000000'
             });
+
+            if (poweredByTextElem) { 
+                 poweredByTextElem.textContent = getText('poweredByText');
+                 poweredByTextElem.classList.remove('hidden');
+            }
         }
 
         async function handleReceiverMode(urlParams) {
