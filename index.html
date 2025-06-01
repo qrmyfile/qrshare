@@ -10,7 +10,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script> 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <script src="https://gosspublic.alicdn.com/aliyun-oss-sdk-6.18.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-md5/0.7.3/md5.min.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/js-md5/0.7.3/md5.min.js"></script> -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-8MQHD5843Z"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -249,7 +249,7 @@
                 statusQrGenerated: "QR code generated! Please scan with another device.",
                 statusOssGetPerms: "Getting OSS upload permission...",
                 statusOssPermsDone: "Permission granted. Uploading to OSS...",
-                statusOssUploaded: "File uploaded to OSS. QR code (direct OSS link) generated!", 
+                statusOssUploaded: "File is Ready to share,QR generated! Please scan with another device.", 
                 statusFileDecoded: "ZIP file decoded and uncompressed.", 
                 statusLinkReady: "File link ready. Click to download.", 
                 errorFileTooLarge: (maxSize) => `File too large (max ${maxSize}).`, 
@@ -320,7 +320,7 @@
                 statusQrGenerated: "二维码已生成！请使用另一台设备扫描。",
                 statusOssGetPerms: "正在获取OSS上传许可...",
                 statusOssPermsDone: "许可获取成功，正在上传至OSS...",
-                statusOssUploaded: "文件已上传至OSS，二维码（OSS直链）已生成！", 
+                statusOssUploaded: "文件已经可供下载，请扫描二维码！", 
                 statusFileDecoded: "ZIP 文件已解码并解压。", 
                 statusLinkReady: "文件链接已准备好，请点击下载。", 
                 errorFileTooLarge: (maxSize) => `文件过大 (最大 ${maxSize})。`, 
