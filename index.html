@@ -11,15 +11,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <script src="https://gosspublic.alicdn.com/aliyun-oss-sdk-6.18.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-md5/0.7.3/md5.min.js"></script>
-<!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-8MQHD5843Z"></script>
-    <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-8MQHD5843Z"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-    gtag('config', 'G-8MQHD5843Z');
-    </script>
+  gtag('config', 'G-8MQHD5843Z');
+</script>
     <style>
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
@@ -49,6 +48,9 @@
         .btn-secondary {
             @apply bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-gray-400;
         }
+        .btn-warning { /* New style for the feedback button */
+            @apply bg-yellow-500 text-white hover:bg-yellow-600 focus:ring-yellow-400;
+        }
         .loader {
             border: 4px solid #f3f3f3; 
             border-top: 4px solid #3498db; 
@@ -70,6 +72,9 @@
         }
         #poweredByText {
             @apply text-xs text-gray-500 mt-2 text-center;
+        }
+        .footer-link { /* Added for blog link styling */
+            @apply text-blue-600 hover:text-blue-700 hover:underline;
         }
     </style>
 </head>
@@ -145,6 +150,10 @@
             </div>
             
             <div id="statusMessage" class="text-sm my-4 p-3 rounded-md hidden"></div>
+            <div class="text-center">
+                <button id="largeFileFeedbackButton" class="btn btn-warning mt-2 hidden"></button>
+                <p id="feedbackConfirmationMessage" class="text-sm text-green-600 mt-2 hidden"></p>
+            </div>
             <div id="loader" class="loader hidden"></div>
 
             <div id="qrCodeContainer" class="text-center hidden">
@@ -176,7 +185,10 @@
         </div>
 
         <footer class="text-center mt-10 pt-6 border-t border-gray-200">
-            <p class="text-sm text-gray-500">&copy; <span id="currentYear"></span> <span id="footerText">qrmyfile.com</span></p>
+            <p class="text-sm text-gray-500 mb-2">&copy; <span id="currentYear"></span> <span id="footerText">qrmyfile.com</span></p>
+            <p class="text-sm text-gray-500">
+                <a href="https://qrmyfile.github.io/" target="_blank" rel="noopener noreferrer" id="blogLink" class="footer-link">博客</a>
+            </p>
         </footer>
     </div>
 
@@ -206,11 +218,14 @@
                 scanQrInstruction: "Scan QR Code to Receive File",
                 poweredByText: "Powered by qrmyfile.com", 
                 resetButton: "Transfer New File",
+                largeFileFeedbackButtonText: "File over 10MB? Click to request support", 
+                feedbackConfirmationText: "Thank you for your feedback!", 
                 receiverTitleInitial: "Receiving file...", 
                 receiverTitleDirectLink: "Ready to process file from QR code...", 
                 downloadButtonText: "Download File",
                 scanAnotherQrText: "Scan Another QR Code",
                 footerText: "qrmyfile.com", 
+                blogLinkText: "Learn more from blog", // Added blog link text
                 previewLabel: (fileName) => `Preview: ${fileName}`,
                 // Promo Text
                 promoFeaturesTitle: "Core Advantages",
@@ -237,7 +252,7 @@
                 statusOssUploaded: "File uploaded to OSS. QR code (direct OSS link) generated!", 
                 statusFileDecoded: "ZIP file decoded and uncompressed.", 
                 statusLinkReady: "File link ready. Click to download.", 
-                errorFileTooLarge: (maxSize) => `File too large. Please select a file smaller than ${maxSize}.`,
+                errorFileTooLarge: (maxSize) => `File too large (max ${maxSize}).`, 
                 errorFileProcessing: (message) => `File processing failed: ${message}`, 
                 errorGenericNetwork: "A network or server error occurred. Please try again later.", 
                 errorGenericProcessing: "An error occurred while processing your file. Please try again.", 
@@ -274,11 +289,14 @@
                 scanQrInstruction: "扫描二维码接收文件",
                 poweredByText: "由 qrmyfile.com 驱动", 
                 resetButton: "传输新文件",
+                largeFileFeedbackButtonText: "文件超10MB？点此反馈", 
+                feedbackConfirmationText: "感谢您的反馈！", 
                 receiverTitleInitial: "正在接收文件...", 
                 receiverTitleDirectLink: "准备处理来自二维码的文件...", 
                 downloadButtonText: "下载文件",
                 scanAnotherQrText: "扫描其他二维码",
                 footerText: "qrmyfile.com", 
+                blogLinkText: "从博客了解更多", // Added blog link text
                 previewLabel: (fileName) => `预览: ${fileName}`,
                 // Promo Text
                 promoFeaturesTitle: "产品优势",
@@ -305,7 +323,7 @@
                 statusOssUploaded: "文件已上传至OSS，二维码（OSS直链）已生成！", 
                 statusFileDecoded: "ZIP 文件已解码并解压。", 
                 statusLinkReady: "文件链接已准备好，请点击下载。", 
-                errorFileTooLarge: (maxSize) => `文件过大，请选择小于 ${maxSize} 的文件。`,
+                errorFileTooLarge: (maxSize) => `文件过大 (最大 ${maxSize})。`, 
                 errorFileProcessing: (message) => `文件处理失败: ${message}`, 
                 errorGenericNetwork: "网络或服务器错误，请稍后重试。", 
                 errorGenericProcessing: "处理文件时发生错误，请重试。", 
@@ -377,6 +395,10 @@
         const scanAnotherQrTextElem = document.getElementById('scanAnotherQrText');
         const footerTextElem = document.getElementById('footerText');
         const poweredByTextElem = document.getElementById('poweredByText'); 
+        const largeFileFeedbackButton = document.getElementById('largeFileFeedbackButton'); 
+        const feedbackConfirmationMessage = document.getElementById('feedbackConfirmationMessage'); 
+        const blogLinkElem = document.getElementById('blogLink');
+
 
         // Promo text elements
         const promoFeaturesTitleElem = document.getElementById('promoFeaturesTitle');
@@ -416,6 +438,9 @@
         const downloadButton = document.getElementById('downloadButton');
         const receiverNote = document.getElementById('receiverNote');
         
+        let originalFileNameForFeedback = ''; 
+        let originalFileSizeForFeedback = 0; 
+        
         document.getElementById('currentYear').textContent = new Date().getFullYear();
 
         document.addEventListener('DOMContentLoaded', initApp);
@@ -447,6 +472,11 @@
             scanQrInstructionElem.textContent = getText('scanQrInstruction');
             if (poweredByTextElem) poweredByTextElem.textContent = getText('poweredByText'); 
             resetButtonElem.textContent = getText('resetButton'); 
+            if (largeFileFeedbackButton) largeFileFeedbackButton.textContent = getText('largeFileFeedbackButtonText');
+            if (feedbackConfirmationMessage) feedbackConfirmationMessage.textContent = getText('feedbackConfirmationText');
+            if (blogLinkElem) blogLinkElem.textContent = getText('blogLinkText');
+
+
             const urlParamsForTitle = new URLSearchParams(window.location.search);
             if (urlParamsForTitle.has('file')) {
                  receiverTitleElem.textContent = getText('receiverTitleInitial');
@@ -513,8 +543,26 @@
 
             resetButtonElem.addEventListener('click', () => { 
                 if(promoSection) promoSection.classList.remove('hidden'); 
+                if(largeFileFeedbackButton) largeFileFeedbackButton.classList.add('hidden');
+                if(feedbackConfirmationMessage) feedbackConfirmationMessage.classList.add('hidden');
                 window.location.href = window.location.pathname; 
             });
+
+            if (largeFileFeedbackButton) {
+                largeFileFeedbackButton.addEventListener('click', () => {
+                    trackEvent('req_lg_file', {
+                        fn: encodeURIComponent(originalFileNameForFeedback),
+                        fs: originalFileSizeForFeedback
+                    });
+                    if(feedbackConfirmationMessage) {
+                        feedbackConfirmationMessage.classList.remove('hidden');
+                        setTimeout(() => {
+                            feedbackConfirmationMessage.classList.add('hidden');
+                        }, 3000); 
+                    }
+                    largeFileFeedbackButton.classList.add('hidden'); 
+                });
+            }
         }
 
         function preventDefaults(e) {
@@ -555,6 +603,9 @@
             if (!file) return;
 
             if(promoSection) promoSection.classList.add('hidden'); 
+            if(largeFileFeedbackButton) largeFileFeedbackButton.classList.add('hidden'); 
+            if(feedbackConfirmationMessage) feedbackConfirmationMessage.classList.add('hidden');
+
 
             trackEvent('select', { 
                 fn: encodeURIComponent(file.name), 
@@ -568,9 +619,15 @@
             fileSizeDisplay.textContent = formatBytes(file.size);
             fileTypeDisplay.textContent = file.type || getText('unknownFileType');
 
+            originalFileNameForFeedback = file.name; 
+            originalFileSizeForFeedback = file.size;
+
             if (file.size > MAX_FILE_SIZE_BYTES) {
                 const userMessageKey = 'errorFileTooLarge';
                 showStatus(statusMessage, userMessageKey, true, formatBytes(MAX_FILE_SIZE_BYTES));
+                if (largeFileFeedbackButton) {
+                    largeFileFeedbackButton.classList.remove('hidden'); 
+                }
                 trackEvent('error', { 
                     ec: 'FILE_TOO_LARGE', 
                     em: userMessageKey, 
